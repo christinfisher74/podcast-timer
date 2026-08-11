@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Legs Up the Wall</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Jost:wght@300;400;500&display=swap');
+
+  :root{
+    --forest: #2f3e33;
+    --olive: #6b7357;
+    --taupe: #a99c85;
+    --cream: #f4f0e6;
+    --line: rgba(47,62,51,0.15);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{
+    background: var(--cream);
+    color: var(--forest);
+    font-family: 'Jost', sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+    padding: 24px;
+    overflow:hidden;
+    position:relative;
+  }
+
+  /* ambient breathing wash */
+  .wash{
+    position:fixed; inset:-20%;
+    background: radial-gradient(circle at 30% 20%, rgba(107,115,87,0.18), transparent 60%),
+                radial-gradient(circle at 75% 80%, rgba(169,156,133,0.22), transparent 55%);
+    animation: drift 22s ease-in-out infinite;
+    z-index:0;
+  }
+  @keyframes drift{
+    0%,100%{ transform: scale(1) translate(0,0); }
+    50%{ transform: scale(1.08) translate(-2%, 1%); }
+  }
+
+  .card{
+    position:relative; z-index:1;
+    width:100%; max-width: 420px;
+    text-align:center;
+  }
+
+  .eyebrow{
+    font-family:'Jost';
+    font-size: 12px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--olive);
+    margin-bottom: 14px;
+  }
+
+  h1{
+    font-family:'Fraunces', serif;
+    font-weight: 500;
+    font-size: clamp(28px, 6vw, 38px);
+    line-height: 1.15;
+    margin-bottom: 10px;
+  }
+
+  .sub{
+    font-size: 15px;
+    color: var(--olive);
+    line-height: 1.5;
+    max-width: 320px;
+    margin: 0 auto 40px;
+  }
+
+  /* timer ring */
+  .ring-wrap{
+    position: relative;
+    width: 240px; height: 240px;
+    margin: 0 auto 36px;
+  }
+  svg{ width:100%; height:100%; transform: rotate(-90deg); }
+  circle{ fill:none; }
+  .track{ stroke: var(--line); stroke-width: 3; }
+  .progress{
+    stroke: var(--olive);
+    stroke-width: 3;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s linear;
+  }
+  .time{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Fraunces', serif;
+    font-weight:400;
+    font-size: 44px;
+    color: var(--forest);
+  }
+  .breathing .time{ animation: pulse 4s ease-in-out infinite; }
+  @keyframes pulse{
+    0%,100%{ opacity:1; } 50%{ opacity: 0.55; }
+  }
+
+  .controls{
+    display:flex; gap: 10px; justify-content:center; margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+  button{
+    font-family:'Jost'; font-size: 13px; letter-spacing:0.06em; text-transform:uppercase;
+    padding: 12px 22px;
+    border-radius: 30px;
+    border: 1px solid var(--forest);
+    background: transparent;
+    color: var(--forest);
+    cursor:pointer;
+    transition: all 0.2s ease;
+  }
+  button.primary{
+    background: var(--forest);
+    color: var(--cream);
+  }
+  button:hover{ opacity: 0.85; transform: translateY(-1px); }
+  button:focus-visible{ outline: 2px solid var(--olive); outline-offset: 2px; }
+
+  .durations{
+    display:flex; gap:8px; justify-content:center; margin-bottom: 32px;
+  }
+  .durations button{
+    padding: 8px 16px; font-size: 12px; border-color: var(--line); color: var(--olive);
+  }
+  .durations button.active{
+    border-color: var(--forest); color: var(--forest); background: rgba(107,115,87,0.1);
+  }
+
+  .message{
+    font-family:'Fraunces', serif;
+    font-style: italic;
+    font-size: 16px;
+    color: var(--olive);
+    min-height: 24px;
+    transition: opacity 0.6s ease;
+  }
+
+  .done-overlay{
+    position:fixed; inset:0; z-index:5;
+    background: var(--forest);
+    color: var(--cream);
+    display:flex; align-items:center; justify-content:center; flex-direction:column;
+    text-align:center; padding: 30px;
+    opacity:0; pointer-events:none;
+    transition: opacity 0.8s ease;
+  }
+  .done-overlay.show{ opacity:1; pointer-events:all; }
+  .done-overlay h2{
+    font-family:'Fraunces', serif; font-weight:500; font-size: clamp(26px,7vw,36px); margin-bottom: 14px;
+  }
+  .done-overlay p{ font-size:15px; opacity:0.85; max-width:300px; margin-bottom: 28px; }
+  .done-overlay button{ border-color: var(--cream); color: var(--cream); }
+
+  @media (prefers-reduced-motion: reduce){
+    .wash{ animation:none; }
+    .breathing .time{ animation:none; }
+  }
+
+  footer{
+    position:relative; z-index:1;
+    margin-top: 4px;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--taupe);
+    text-transform: uppercase;
+  }
+
+  .listen-section{
+    position: relative; z-index:1;
+    margin-top: 34px;
+    padding-top: 28px;
+    border-top: 1px solid var(--line);
+  }
+  .listen-label{
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--olive);
+    margin-bottom: 16px;
+  }
+  .pod-tabs{
+    display:flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .pod-tab{
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 14px 18px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: rgba(255,255,255,0.4);
+    text-decoration: none;
+    color: var(--forest);
+    text-align: left;
+    transition: all 0.2s ease;
+  }
+  .pod-tab:hover{
+    border-color: var(--olive);
+    background: rgba(255,255,255,0.7);
+    transform: translateY(-1px);
+  }
+  .pod-tab:focus-visible{
+    outline: 2px solid var(--olive);
+    outline-offset: 2px;
+  }
+  .pod-name{
+    font-family: 'Fraunces', serif;
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+  .pod-desc{
+    font-size: 12.5px;
+    color: var(--olive);
+  }
+  .pod-arrow{
+    font-size: 18px;
+    color: var(--taupe);
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+  <div class="wash"></div>
+
+  <div class="card">
+    <div class="eyebrow">Feminine Strength Co.</div>
+    <h1>Legs up the wall</h1>
+    <p class="sub">One thing, just for you today. No workout, no to-do list &mdash; just ten quiet minutes.</p>
+
+    <div class="durations" id="durations">
+      <button data-min="5">5 min</button>
+      <button data-min="10" class="active">10 min</button>
+      <button data-min="15">15 min</button>
+    </div>
+
+    <div class="ring-wrap breathing" id="ringWrap">
+      <svg viewBox="0 0 240 240">
+        <circle class="track" cx="120" cy="120" r="110"></circle>
+        <circle class="progress" id="progressCircle" cx="120" cy="120" r="110"></circle>
+      </svg>
+      <div class="time" id="timeDisplay">10:00</div>
+    </div>
+
+    <div class="controls">
+      <button class="primary" id="startBtn">Start</button>
+      <button id="resetBtn">Reset</button>
+    </div>
+
+    <div class="message" id="message">Get comfortable, and press start when you're ready.</div>
+
+    <div class="listen-section">
+      <div class="listen-label">Something to listen to</div>
+      <div class="pod-tabs">
+        <a class="pod-tab" href="https://open.spotify.com/show/6wegpF4BHu5dQG7sTg1Cz9" target="_blank" rel="noopener">
+          <div>
+            <div class="pod-name">Nothing Much Happens</div>
+            <div class="pod-desc">Cozy bedtime-style stories where nothing much happens &mdash; on purpose</div>
+          </div>
+          <span class="pod-arrow">&#8599;</span>
+        </a>
+        <a class="pod-tab" href="https://podcasts.apple.com/us/podcast/calm-pills-soothing-space-ambient-and-piano-music-for/id1173559723" target="_blank" rel="noopener">
+          <div>
+            <div class="pod-name">Calm Pills</div>
+            <div class="pod-desc">Ambient piano &amp; soundscapes, no talking at all</div>
+          </div>
+          <span class="pod-arrow">&#8599;</span>
+        </a>
+        <a class="pod-tab" href="https://open.spotify.com/show/37McjD0j2cdu4GExcFQgm0" target="_blank" rel="noopener">
+          <div>
+            <div class="pod-name">Tara Brach</div>
+            <div class="pod-desc">Warm, gentle guided meditations and talks on self-compassion</div>
+          </div>
+          <span class="pod-arrow">&#8599;</span>
+        </a>
+        <a class="pod-tab" href="https://open.spotify.com/show/3CPoJwrn09eF1bHFgeHZ0v" target="_blank" rel="noopener">
+          <div>
+            <div class="pod-name">The Daily Meditation Podcast</div>
+            <div class="pod-desc">Short, simple guided sessions &mdash; easy to drop into ten quiet minutes</div>
+          </div>
+          <span class="pod-arrow">&#8599;</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <footer>Real by Christin Fisher</footer>
+
+  <div class="done-overlay" id="doneOverlay">
+    <h2>Well done.</h2>
+    <p>You showed up for yourself today. That's the whole point.</p>
+    <button id="closeOverlay">Close</button>
+  </div>
+
+<script>
+  const radius = 110;
+  const circumference = 2 * Math.PI * radius;
+  const progressCircle = document.getElementById('progressCircle');
+  progressCircle.style.strokeDasharray = circumference;
+  progressCircle.style.strokeDashoffset = 0;
+
+  let totalSeconds = 10 * 60;
+  let remaining = totalSeconds;
+  let intervalId = null;
+  let running = false;
+
+  const timeDisplay = document.getElementById('timeDisplay');
+  const startBtn = document.getElementById('startBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const message = document.getElementById('message');
+  const durationsWrap = document.getElementById('durations');
+  const doneOverlay = document.getElementById('doneOverlay');
+  const closeOverlay = document.getElementById('closeOverlay');
+  const ringWrap = document.getElementById('ringWrap');
+
+  const gentleLines = [
+    "Let your shoulders drop.",
+    "Nothing to fix right now. Just breathe.",
+    "This is allowed to be easy.",
+    "You don't have to earn this rest.",
+    "Just a few more minutes, just for you."
+  ];
+
+  function formatTime(s){
+    const m = Math.floor(s/60).toString().padStart(2,'0');
+    const sec = (s%60).toString().padStart(2,'0');
+    return `${m}:${sec}`;
+  }
+
+  function updateDisplay(){
+    timeDisplay.textContent = formatTime(remaining);
+    const fraction = remaining / totalSeconds;
+    progressCircle.style.strokeDashoffset = circumference * (1 - fraction);
+  }
+
+  function tick(){
+    remaining -= 1;
+    updateDisplay();
+
+    if (remaining === Math.floor(totalSeconds * 0.66) || remaining === Math.floor(totalSeconds * 0.33)){
+      const line = gentleLines[Math.floor(Math.random()*gentleLines.length)];
+      message.style.opacity = 0;
+      setTimeout(()=>{ message.textContent = line; message.style.opacity = 1; }, 400);
+    }
+
+    if (remaining <= 0){
+      clearInterval(intervalId);
+      running = false;
+      startBtn.textContent = "Start";
+      doneOverlay.classList.add('show');
+    }
+  }
+
+  startBtn.addEventListener('click', () => {
+    if (running){
+      clearInterval(intervalId);
+      running = false;
+      startBtn.textContent = "Start";
+      message.textContent = "Paused whenever you need. Press start to continue.";
+    } else {
+      running = true;
+      startBtn.textContent = "Pause";
+      message.textContent = "Legs up, eyes soft, breathe.";
+      intervalId = setInterval(tick, 1000);
+    }
+  });
+
+  resetBtn.addEventListener('click', () => {
+    clearInterval(intervalId);
+    running = false;
+    remaining = totalSeconds;
+    startBtn.textContent = "Start";
+    updateDisplay();
+    message.textContent = "Get comfortable, and press start when you're ready.";
+    doneOverlay.classList.remove('show');
+  });
+
+  durationsWrap.addEventListener('click', (e) => {
+    if (e.target.tagName !== 'BUTTON') return;
+    document.querySelectorAll('#durations button').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    const min = parseInt(e.target.dataset.min, 10);
+    totalSeconds = min * 60;
+    remaining = totalSeconds;
+    clearInterval(intervalId);
+    running = false;
+    startBtn.textContent = "Start";
+    updateDisplay();
+    message.textContent = "Get comfortable, and press start when you're ready.";
+  });
+
+  closeOverlay.addEventListener('click', () => {
+    doneOverlay.classList.remove('show');
+  });
+
+  updateDisplay();
+</script>
+</body>
+</html>
